@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>가상 실험: 전압과 전류 사이의 관계</title>
+<title>회로 가상 실험</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -43,10 +43,7 @@ body{margin:0;background:var(--bg);color:var(--text);overscroll-behavior:none;to
   font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;line-height:1.5}
 .wrap{max-width:1600px;margin:0 auto;padding:8px 10px 14px}
 .top{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-bottom:8px}
-.top h1{font-size:1.08rem;margin:0 0 0 -6px;font-weight:700;letter-spacing:-.01em;flex:0 1 auto;outline:none;border-radius:6px;padding:2px 6px;cursor:text;user-select:text;-webkit-user-select:text}
-.top h1:hover{background:var(--surface)}
-.top h1:focus{background:var(--surface);box-shadow:0 0 0 2px var(--ring)}
-.tb.pen{min-height:30px;padding:2px 9px;font-size:.78rem;margin-right:auto}
+.top h1{font-size:1.08rem;margin:0 auto 0 0;font-weight:700;letter-spacing:-.01em;flex:0 1 auto}
 .toolbar{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
 .group{display:flex;align-items:center;gap:6px}
 .lbl{font-size:.85rem;color:var(--muted)}
@@ -60,6 +57,11 @@ button.tb:disabled{opacity:.45;cursor:default}
 button.tb.arm{background:#d32f2f;color:#fff;border-color:#d32f2f}
 body.fsmode .top h1,body.fsmode #editTitle,body.fsmode details{display:none}
 body.fsmode .wrap{max-width:none;padding:6px 8px 8px}
+.qr-card{width:min(520px,100%);text-align:center}
+#qrBox{width:min(52vmin,400px);margin:0 auto 10px;border-radius:10px;overflow:hidden;background:#fff;min-height:40px}
+#qrBox svg{display:block;width:100%;height:auto}
+#qrUrl{width:100%;font:inherit;font-size:.95rem;padding:8px 10px;border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--text);text-align:center}
+#qrNote{margin:6px 0 0;font-size:.82rem;color:var(--muted);min-height:1.3em}
 button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
 .toggle{display:flex;align-items:center;gap:6px;font-size:.88rem;color:var(--text);cursor:pointer;min-height:38px}
 .toggle input{width:20px;height:20px;accent-color:var(--accent)}
@@ -108,8 +110,7 @@ details li{margin:3px 0}
 <body>
 <div class="wrap">
   <div class="top">
-    <h1 id="title" contenteditable="true" spellcheck="false" title="눌러서 제목을 고칠 수 있어요">전압과 전류 사이의 관계 알아보기</h1>
-    <button class="tb pen" id="editTitle">✎ 제목 고치기</button>
+    <h1 id="title">회로 가상 실험</h1>
     <div class="toolbar">
       <div class="group">
         <span class="lbl">전선 색</span>
@@ -126,6 +127,7 @@ details li{margin:3px 0}
         <button class="tb" id="reset">실험대 비우기</button>
         <button class="tb" id="trayBtn">준비물 숨기기</button>
         <button class="tb" id="fs">전체 화면</button>
+        <button class="tb" id="qrBtn">QR 코드</button>
       </div>
       <label class="toggle"><input type="checkbox" id="showI" checked> 전원 장치 전류 표시</label>
     </div>
@@ -159,6 +161,18 @@ details li{margin:3px 0}
       <li>전원 장치의 ▲▼ 버튼이나 노브로 전압을 0.1 V씩 조절해요. 스위치를 누르면 열리고 닫히고, 계기를 누르면 눈금을 크게 볼 수 있어요.</li>
     </ul>
   </details>
+</div>
+
+<div class="zoom" id="qr" hidden>
+  <div class="zoom-card qr-card" role="dialog" aria-modal="true" aria-label="학생 접속용 QR 코드">
+    <div class="zoom-head">
+      <strong>학생 접속용 QR 코드</strong><span></span>
+      <button class="tb" id="qrClose">닫기</button>
+    </div>
+    <div id="qrBox"></div>
+    <input id="qrUrl" type="url" inputmode="url" spellcheck="false" autocomplete="off" aria-label="접속 주소">
+    <p id="qrNote"></p>
+  </div>
 </div>
 
 <div class="zoom" id="zoom" hidden>
@@ -318,7 +332,7 @@ TYPES.ps.build=(g,ctx,it)=>{
   if(ctx.main){it.dispV=dV;it.dispI=dI;}else{drawSeven(dV,['0','0','0'],1,30,23,false);drawSeven(dI,['0','0','0'],0,30,75,false);}
   txt(g,148,58,'V',{size:12,weight:700,fill:'#b33a33'});
   txt(g,148,110,'A',{size:12,weight:700,fill:'#b33a33'});
-  const k=el('g',Object.assign({transform:'translate(232,54)'},ctx.a({'data-knob':it.uid,tabindex:'0',role:'slider','aria-label':'전압 조절 노브',style:'cursor:grab'})),g);
+  const k=el('g',Object.assign({transform:'translate(232,54)'},ctx.a({'data-knob':it.uid,tabindex:'0',role:'slider','aria-label':'전압 조절 노브',style:'cursor:ns-resize'})),g);
   el('circle',{r:34,fill:'transparent'},k);
   el('circle',{r:31,fill:'#121417'},k);
   el('circle',{r:28,fill:'url(#knobGrad)',stroke:'#0c0d0f','stroke-width':1.5},k);
@@ -405,13 +419,13 @@ const isBat=i=>i.type==='bat1'||i.type==='bat2';
 const TRAY_ORDER=['ps','sw','am','vm','nl','ns','bat2','bat1','bulb'];
 
 /* ---------- instances ---------- */
-let uidN=0;
+let uidN=0,zN=0;
 function tid(it,k){return it.uid+':'+k;}
 function splitT(id){const i=id.indexOf(':');const it=byId[id.slice(0,i)];return{it,d:TYPES[it.type].tm[id.slice(i+1)]};}
 function tp(id){const {it,d}=splitT(id);return{x:it.x+d.lx,y:it.y+d.ly};}
 function addItem(type,x,y){
   const def=TYPES[type];
-  const it={uid:'i'+(++uidN),type,x,y,w:def.w,h:def.h};
+  const it={uid:'i'+(++uidN),type,x,y,w:def.w,h:def.h,z:++zN};
   if(type==='ps')Object.assign(it,{V10:0,tripped:false,Ips:0,lastV:'',lastI:''});
   if(type==='sw')Object.assign(it,{on:false,angle:-38,tip:false});
   if(type==='am'||type==='vm')Object.assign(it,{ranges:METERS[type].ranges,active:METERS[type].def,angle:-50,vel:0,target:-50,faces:[],conn:[],frac:0});
@@ -440,8 +454,13 @@ function relabel(){
 }
 function allTerms(){const r=[];for(const it of S.items)for(const t of TYPES[it.type].terms)r.push(tid(it,t[0]));return r;}
 function termLabel(id){const {it,d}=splitT(id);return it.label+' '+d.label;}
+function termCovered(it,x,y){return S.items.some(o=>o!==it&&o.z>it.z&&x>=o.x-4&&x<=o.x+o.w+4&&y>=o.y-4&&y<=o.y+o.h+4);}
 function nearestTerm(pt,thr){let best=null,bd=thr;
-  for(const it of S.items)for(const t of TYPES[it.type].terms){const x=it.x+t[1],y=it.y+t[2];const d=Math.hypot(pt.x-x,pt.y-y);if(d<bd){bd=d;best=tid(it,t[0]);}}
+  for(const it of S.items)for(const t of TYPES[it.type].terms){const x=it.x+t[1],y=it.y+t[2];const d=Math.hypot(pt.x-x,pt.y-y);
+    if(d>=bd)continue;
+    if(termCovered(it,x,y))continue;
+    if(d>16&&S.items.some(o=>o!==it&&o.z>it.z&&pt.x>=o.x&&pt.x<=o.x+o.w&&pt.y>=o.y&&pt.y<=o.y+o.h))continue;
+    bd=d;best=tid(it,t[0]);}
   return best;}
 
 /* ---------- tray ---------- */
@@ -601,19 +620,21 @@ function polyMid(P){let tot=0;for(let i=1;i<P.length;i++)tot+=Math.hypot(P[i].x-
   return P[0];}
 let wireRAF=0;
 function scheduleWires(){if(wireRAF)return;wireRAF=requestAnimationFrame(()=>{wireRAF=0;renderWires();});}
+function segDist(p,a,b){const dx=b.x-a.x,dy=b.y-a.y,l=dx*dx+dy*dy;let t=l?((p.x-a.x)*dx+(p.y-a.y)*dy)/l:0;t=clamp(t,0,1);return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy);}
+function wireAt(pt){const thr=Math.max(11,14/pxPerUnit());let best=-1,bd=thr;
+  S.wires.forEach((w,i)=>{const P=w.pts;if(!P)return;for(let k=0;k<P.length-1;k++){const d=segDist(pt,P[k],P[k+1]);if(d<bd){bd=d;best=i;}}});return best;}
 function renderWires(){
   routeAll();
   L.wires.innerHTML='';
   S.wires.forEach((w,i)=>{
     const P=w.pts,a=P[0],b=P[P.length-1],d=roundPath(P);
     const dim=S.selected!==null&&S.selected!==i;
-    const g=el('g',{'data-w':i,style:'cursor:pointer',opacity:dim?.3:1},L.wires);
+    const g=el('g',{'data-w':i,'pointer-events':'none',opacity:dim?.3:1},L.wires);
     el('path',{d,stroke:'#2d5348','stroke-width':15,fill:'none','stroke-linecap':'butt','stroke-linejoin':'round'},g);
     if(S.selected===i)el('path',{d,stroke:'#fff','stroke-width':14,fill:'none','stroke-linecap':'round','stroke-linejoin':'round',opacity:.85},g);
     el('path',{d,stroke:'rgba(0,0,0,.55)','stroke-width':9,fill:'none','stroke-linecap':'round','stroke-linejoin':'round'},g);
     el('path',{d,stroke:w.color,'stroke-width':6,fill:'none','stroke-linecap':'round','stroke-linejoin':'round'},g);
     el('path',{d,stroke:'rgba(255,255,255,.35)','stroke-width':1.3,fill:'none',transform:'translate(-1,-1)'},g);
-    el('path',{d,stroke:'transparent','stroke-width':22,fill:'none'},g);
     [a,b].forEach(p=>{el('circle',{cx:p.x,cy:p.y,r:7.5,fill:w.color,stroke:'rgba(0,0,0,.5)','stroke-width':1.2},g);
       el('circle',{cx:p.x-2,cy:p.y-2,r:2.4,fill:'rgba(255,255,255,.4)'},g);});
   });
@@ -624,6 +645,7 @@ function renderWires(){
 }
 function renderRings(){
   for(const it of S.items)for(const k in it.rings){const id=tid(it,k),r=it.rings[k];r.classList.remove('cand','hover','pending');
+    const tt=TYPES[it.type].tm[k];if(termCovered(it,it.x+tt.lx,it.y+tt.ly))continue;
     if(S.pending===id)r.classList.add('pending');else if(S.hover===id)r.classList.add('hover');else if(S.pending)r.classList.add('cand');}
 }
 function addWire(a,b){
@@ -769,7 +791,7 @@ function setV(it,v10){
 function toggleSwitch(it){it.on=!it.on;it.tip=it.on&&S.items.some(p=>p.type==='ps'&&p.V10>0);update();}
 function svgPt(e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse());}
 function closestAttr(target,attr){return target&&target.closest?target.closest(`[${attr}]`):null;}
-function bringToFront(it){L.comp.appendChild(it.g);}
+function bringToFront(it){it.z=++zN;L.comp.appendChild(it.g);}
 function overTray(e){const r=trayEl.getBoundingClientRect();return !trayEl.classList.contains('collapsed')&&e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;}
 function setTrayHot(on){trayEl.classList.toggle('hot',on);}
 
@@ -801,12 +823,11 @@ svg.addEventListener('pointerdown',e=>{
     svg.setPointerCapture(e.pointerId);drawRubber(pt);renderWires();renderRings();return;
   }
   cancelPending();
-  const w=closestAttr(e.target,'data-w');
-  if(w){drag={type:'wire',i:+w.getAttribute('data-w')};return;}
+  if(!closestAttr(e.target,'data-comp')){const wi=wireAt(pt);if(wi>=0){drag={type:'wire',i:wi};return;}}
   if(S.selected!==null){S.selected=null;renderWires();}
   const k=closestAttr(e.target,'data-knob');
-  if(k){const it=byId[k.getAttribute('data-knob')];const kc={x:it.x+232,y:it.y+54};
-    drag={type:'knob',it,kc,last:Math.atan2(pt.y-kc.y,pt.x-kc.x),acc:0};svg.setPointerCapture(e.pointerId);e.preventDefault();return;}
+  if(k){const it=byId[k.getAttribute('data-knob')];
+    drag={type:'knob',it,ly:e.clientY,acc:0};svg.setPointerCapture(e.pointerId);e.preventDefault();return;}
   const st=closestAttr(e.target,'data-step');
   if(st){const [u,s]=st.getAttribute('data-step').split('|');const it=byId[u];const sv=+s;setV(it,it.V10+sv);
     holdTimer=setTimeout(()=>{holdInt=setInterval(()=>setV(it,it.V10+sv),80);},420);drag={type:'step'};return;}
@@ -839,10 +860,8 @@ window.addEventListener('pointermove',e=>{
   if(drag.type==='pan'){view.x=drag.vx-(e.clientX-drag.sx)/drag.k;view.y=drag.vy-(e.clientY-drag.sy)/drag.k;clampView();applyView();return;}
   const pt=svgPt(e);
   if(drag.type==='knob'){
-    const a=Math.atan2(pt.y-drag.kc.y,pt.x-drag.kc.x);let d=a-drag.last;
-    if(d>Math.PI)d-=2*Math.PI;if(d<-Math.PI)d+=2*Math.PI;drag.last=a;
-    drag.acc+=d*180/Math.PI;const steps=Math.trunc(drag.acc/2.5);
-    if(steps){drag.acc-=steps*2.5;setV(drag.it,drag.it.V10+steps);}return;}
+    drag.acc+=drag.ly-e.clientY;drag.ly=e.clientY;const steps=Math.trunc(drag.acc/3);
+    if(steps){drag.acc-=steps*3;setV(drag.it,drag.it.V10+steps);}return;}
   if(drag.type==='comp'){
     const it=drag.it;
     if(!drag.moved&&Math.hypot(pt.x-drag.sx,pt.y-drag.sy)>9){drag.moved=true;bringToFront(it);}
@@ -898,7 +917,7 @@ svg.addEventListener('keydown',e=>{const k=closestAttr(e.target,'data-knob');if(
   if(e.key==='ArrowUp'||e.key==='ArrowRight'){setV(it,it.V10+1);e.preventDefault();}
   if(e.key==='ArrowDown'||e.key==='ArrowLeft'){setV(it,it.V10-1);e.preventDefault();}});
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){if(!zoomEl.hidden)closeZoom();else{cancelPending();if(S.selected!==null){S.selected=null;renderWires();}}}
+  if(e.key==='Escape'){if(!zoomEl.hidden)closeZoom();else if(!qrEl.hidden)qrEl.hidden=true;else{cancelPending();if(S.selected!==null){S.selected=null;renderWires();}}}
   if((e.key==='Delete'||e.key==='Backspace')&&document.activeElement===document.body){
     if(S.selected!==null){deleteSelected();e.preventDefault();}
     else if(S.selItem&&byId[S.selItem]){removeItem(byId[S.selItem]);update();e.preventDefault();}}
@@ -943,15 +962,99 @@ function updateZoomText(){if(!zoom)return;const it=zoom.it;
 document.getElementById('zoomClose').addEventListener('click',closeZoom);
 zoomEl.addEventListener('click',e=>{if(e.target===zoomEl)closeZoom();});
 
-const titleEl=document.getElementById('title');
-const DEFAULT_TITLE=titleEl.textContent;
-try{const t=localStorage.getItem('vlab-title');if(t)titleEl.textContent=t;}catch(err){}
-document.title=titleEl.textContent;
-titleEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();titleEl.blur();}});
-titleEl.addEventListener('blur',()=>{let t=titleEl.textContent.replace(/\s+/g,' ').trim();
-  if(!t){t=DEFAULT_TITLE;titleEl.textContent=t;}document.title=t;try{localStorage.setItem('vlab-title',t);}catch(err){}});
-document.getElementById('editTitle').addEventListener('click',()=>{titleEl.focus();
-  const r=document.createRange();r.selectNodeContents(titleEl);const s=getSelection();s.removeAllRanges();s.addRange(r);});
+/* ---------- QR code (byte mode, ECC M, versions 1-9) ---------- */
+const QR=(function(){
+  const ECC_PER_BLOCK=[0,10,16,26,18,24,16,18,22,22],NUM_BLOCKS=[0,1,1,1,2,2,4,4,4,5];
+  const ALIGN=[[],[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46]];
+  function rawModules(v){let r=(16*v+128)*v+64;if(v>=2){const n=Math.floor(v/7)+2;r-=(25*n-10)*n-55;if(v>=7)r-=36;}return r;}
+  function dataCodewords(v){return Math.floor(rawModules(v)/8)-ECC_PER_BLOCK[v]*NUM_BLOCKS[v];}
+  function mul(x,y){let z=0;for(let i=7;i>=0;i--){z=(z<<1)^((z>>>7)*0x11D);z^=((y>>>i)&1)*x;}return z;}
+  function rsDiv(d){const r=new Array(d).fill(0);r[d-1]=1;let root=1;
+    for(let i=0;i<d;i++){for(let j=0;j<r.length;j++){r[j]=mul(r[j],root);if(j+1<r.length)r[j]^=r[j+1];}root=mul(root,2);}return r;}
+  function rsRem(data,div){const r=div.map(()=>0);
+    for(const b of data){const f=b^r.shift();r.push(0);div.forEach((c,i)=>r[i]^=mul(c,f));}return r;}
+  const bit=(x,i)=>((x>>>i)&1)!==0;
+  function encode(text){
+    const bytes=Array.from(new TextEncoder().encode(text));
+    let ver=0;for(let v=1;v<=9;v++){if(bytes.length<=dataCodewords(v)-2){ver=v;break;}}
+    if(!ver)return null;
+    const bits=[];const put=(val,len)=>{for(let i=len-1;i>=0;i--)bits.push((val>>>i)&1);};
+    put(4,4);put(bytes.length,8);bytes.forEach(b=>put(b,8));
+    const cap=dataCodewords(ver)*8;
+    put(0,Math.min(4,cap-bits.length));put(0,(8-bits.length%8)%8);
+    for(let p=0xEC;bits.length<cap;p^=0xEC^0x11)put(p,8);
+    const data=[];for(let i=0;i<bits.length;i+=8){let b=0;for(let j=0;j<8;j++)b=(b<<1)|bits[i+j];data.push(b);}
+    // blocks
+    const nb=NUM_BLOCKS[ver],el=ECC_PER_BLOCK[ver],raw=Math.floor(rawModules(ver)/8);
+    const nShort=nb-raw%nb,shortLen=Math.floor(raw/nb),div=rsDiv(el),blocks=[];
+    for(let i=0,k=0;i<nb;i++){const dat=data.slice(k,k+shortLen-el+(i<nShort?0:1));k+=dat.length;
+      const ecc=rsRem(dat,div);if(i<nShort)dat.push(0);blocks.push(dat.concat(ecc));}
+    const all=[];
+    for(let i=0;i<blocks[0].length;i++)blocks.forEach((b,j)=>{if(i!==shortLen-el||j>=nShort)all.push(b[i]);});
+    // matrix
+    const size=ver*4+17;
+    const m=Array.from({length:size},()=>new Array(size).fill(false));
+    const fn=Array.from({length:size},()=>new Array(size).fill(false));
+    const setF=(x,y,d)=>{m[y][x]=d;fn[y][x]=true;};
+    for(let i=0;i<size;i++){setF(6,i,i%2===0);setF(i,6,i%2===0);}
+    const finder=(cx,cy)=>{for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const d=Math.max(Math.abs(dx),Math.abs(dy)),x=cx+dx,y=cy+dy;
+      if(x>=0&&x<size&&y>=0&&y<size)setF(x,y,d!==2&&d!==4);}};
+    finder(3,3);finder(size-4,3);finder(3,size-4);
+    const ap=ALIGN[ver],n=ap.length;
+    for(let i=0;i<n;i++)for(let j=0;j<n;j++){if((i===0&&j===0)||(i===0&&j===n-1)||(i===n-1&&j===0))continue;
+      for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)setF(ap[i]+dx,ap[j]+dy,Math.max(Math.abs(dx),Math.abs(dy))!==1);}
+    const fmt=mask=>{const d=(0<<3)|mask;let r=d;for(let i=0;i<10;i++)r=(r<<1)^((r>>>9)*0x537);
+      const b=((d<<10)|r)^0x5412;
+      for(let i=0;i<=5;i++)setF(8,i,bit(b,i));setF(8,7,bit(b,6));setF(8,8,bit(b,7));setF(7,8,bit(b,8));
+      for(let i=9;i<15;i++)setF(14-i,8,bit(b,i));
+      for(let i=0;i<8;i++)setF(size-1-i,8,bit(b,i));
+      for(let i=8;i<15;i++)setF(8,size-15+i,bit(b,i));
+      setF(8,size-8,true);};
+    fmt(0);
+    if(ver>=7){let r=ver;for(let i=0;i<12;i++)r=(r<<1)^((r>>>11)*0x1F25);const b=(ver<<12)|r;
+      for(let i=0;i<18;i++){const c=bit(b,i),a=size-11+i%3,q=Math.floor(i/3);setF(a,q,c);setF(q,a,c);}}
+    // codewords
+    let k=0;
+    for(let right=size-1;right>=1;right-=2){if(right===6)right=5;
+      for(let vert=0;vert<size;vert++)for(let j=0;j<2;j++){const x=right-j,up=((right+1)&2)===0,y=up?size-1-vert:vert;
+        if(!fn[y][x]&&k<all.length*8){m[y][x]=bit(all[k>>>3],7-(k&7));k++;}}}
+    const inv=(mask,x,y)=>{switch(mask){case 0:return(x+y)%2===0;case 1:return y%2===0;case 2:return x%3===0;case 3:return(x+y)%3===0;
+      case 4:return(Math.floor(x/3)+Math.floor(y/2))%2===0;case 5:return x*y%2+x*y%3===0;case 6:return(x*y%2+x*y%3)%2===0;default:return((x+y)%2+x*y%3)%2===0;}};
+    const mask=mk=>{for(let y=0;y<size;y++)for(let x=0;x<size;x++)if(!fn[y][x]&&inv(mk,x,y))m[y][x]=!m[y][x];};
+    const penalty=()=>{let p=0;
+      for(let t=0;t<2;t++){for(let a=0;a<size;a++){let run=1,line='';
+        for(let b=0;b<size;b++){const c=t?m[b][a]:m[a][b];line+=c?'1':'0';
+          if(b>0){const pc=t?m[b-1][a]:m[a][b-1];if(c===pc){run++;if(run===5)p+=3;else if(run>5)p++;}else run=1;}}
+        const f=/10111010000|00001011101/g;let mt;while((mt=f.exec(line))){p+=40;f.lastIndex=mt.index+1;}}}
+      for(let y=0;y<size-1;y++)for(let x=0;x<size-1;x++){const c=m[y][x];if(c===m[y][x+1]&&c===m[y+1][x]&&c===m[y+1][x+1])p+=3;}
+      let dark=0;for(const r of m)for(const c of r)if(c)dark++;const tot=size*size;
+      p+=(Math.ceil(Math.abs(dark*20-tot*10)/tot)-1)*10;return p;};
+    let best=0,bp=1e9;
+    for(let mk=0;mk<8;mk++){mask(mk);fmt(mk);const p=penalty();if(p<bp){bp=p;best=mk;}mask(mk);}
+    mask(best);fmt(best);
+    return m;
+  }
+  function svg(text){const m=encode(text);if(!m)return '';const n=m.length,q=4;let d='';
+    for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(m[y][x])d+=`M${x+q} ${y+q}h1v1h-1z`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n+2*q} ${n+2*q}" shape-rendering="crispEdges" role="img" aria-label="QR 코드"><rect width="100%" height="100%" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;}
+  return{encode,svg};
+})();
+
+const qrEl=document.getElementById('qr'),qrBox=document.getElementById('qrBox'),qrUrl=document.getElementById('qrUrl'),qrNote=document.getElementById('qrNote');
+function pageUrl(){const l=location;if(l.protocol!=='http:'&&l.protocol!=='https:')return '';return l.origin+l.pathname.replace('index.html','');}
+function drawQr(){const u=qrUrl.value.trim();
+  const ok=(u.startsWith('http://')||u.startsWith('https://'))&&u.length>9&&u.indexOf(' ')<0;
+  if(!ok){qrBox.innerHTML='';qrNote.textContent='배포한 주소(https://...)를 아래 칸에 입력해 주세요.';return;}
+  const sv=QR.svg(u);
+  if(!sv){qrBox.innerHTML='';qrNote.textContent='주소가 너무 길어요. 180자 이내로 줄여 주세요.';return;}
+  qrBox.innerHTML=sv;qrNote.textContent='태블릿 카메라로 비추면 바로 접속돼요.';}
+document.getElementById('qrBtn').addEventListener('click',()=>{
+  let saved='';try{saved=localStorage.getItem('vlab-qr-url')||'';}catch(err){}
+  qrUrl.value=pageUrl()||saved;drawQr();qrEl.hidden=false;});
+qrUrl.addEventListener('input',()=>{drawQr();if(!pageUrl()){try{localStorage.setItem('vlab-qr-url',qrUrl.value.trim());}catch(err){}}});
+document.getElementById('qrClose').addEventListener('click',()=>{qrEl.hidden=true;});
+qrEl.addEventListener('click',e=>{if(e.target===qrEl)qrEl.hidden=true;});
+
 const mainEl=document.querySelector('.main');
 function sizeMain(){const top=mainEl.getBoundingClientRect().top+window.scrollY;
   mainEl.style.height=Math.max(340,window.innerHeight-top-12)+'px';}
