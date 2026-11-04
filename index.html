@@ -62,6 +62,13 @@ body.fsmode .wrap{max-width:none;padding:6px 8px 8px}
 #qrBox svg{display:block;width:100%;height:auto}
 #qrUrl{width:100%;font:inherit;font-size:.95rem;padding:8px 10px;border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--text);text-align:center}
 #qrNote{margin:6px 0 0;font-size:.82rem;color:var(--muted);min-height:1.3em}
+.vset-card{width:min(470px,100%);text-align:center}
+#vsetVal{font-size:2.1rem;font-weight:700;margin:0 0 10px;font-variant-numeric:tabular-nums}
+#vsetGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+#vsetGrid button{min-height:50px;font:inherit;font-size:1.05rem;font-weight:500;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer}
+#vsetGrid button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.vset-fine{display:flex;gap:8px;justify-content:center;margin-top:12px}
+.vset-fine .tb{min-width:110px;min-height:46px}
 button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
 .toggle{display:flex;align-items:center;gap:6px;font-size:.88rem;color:var(--text);cursor:pointer;min-height:38px}
 .toggle input{width:20px;height:20px;accent-color:var(--accent)}
@@ -160,6 +167,18 @@ details li{margin:3px 0}
       <li>전원 장치의 ▲▼ 버튼이나 노브로 전압을 0.1 V씩 조절해요. 스위치를 누르면 열리고 닫히고, 계기를 누르면 눈금을 크게 볼 수 있어요.</li>
     </ul>
   </details>
+</div>
+
+<div class="zoom" id="vset" hidden>
+  <div class="zoom-card vset-card" role="dialog" aria-modal="true" aria-label="전압 설정">
+    <div class="zoom-head">
+      <strong>전압 설정</strong><span></span>
+      <button class="tb" id="vsetClose">닫기</button>
+    </div>
+    <div id="vsetVal">0.0 V</div>
+    <div id="vsetGrid"></div>
+    <div class="vset-fine"><button class="tb" id="vsetDn">−0.1 V</button><button class="tb" id="vsetUp">+0.1 V</button></div>
+  </div>
 </div>
 
 <div class="zoom" id="qr" hidden>
@@ -300,6 +319,7 @@ TYPES.ps.build=(g,ctx,it)=>{
   if(ctx.main){it.dispV=dV;it.dispI=dI;}else{drawSeven(dV,['0','0','0'],1,30,23,false);drawSeven(dI,['0','0','0'],0,30,75,false);}
   txt(g,148,58,'V',{size:12,weight:700,fill:'#b33a33'});
   txt(g,148,110,'A',{size:12,weight:700,fill:'#b33a33'});
+  el('rect',Object.assign({x:16,y:18,width:146,height:46,rx:4,fill:'transparent'},ctx.a({'data-vdisp':it.uid,style:'cursor:pointer'})),g);
   const k=el('g',Object.assign({transform:'translate(232,54)'},ctx.a({'data-knob':it.uid,tabindex:'0',role:'slider','aria-label':'전압 조절 노브',style:'cursor:ns-resize'})),g);
   el('circle',{r:34,fill:'transparent'},k);
   el('circle',{r:31,fill:'#121417'},k);
@@ -310,6 +330,12 @@ TYPES.ps.build=(g,ctx,it)=>{
   el('line',{x1:0,y1:-10,x2:0,y2:-23,stroke:'#f2f2f2','stroke-width':3,'stroke-linecap':'round'},kr);
   if(ctx.main)it.knobRot=kr;
   txt(g,232,96,'VOLTAGE',{size:6.5,fill:'#8f959d',weight:700,ls:.5});
+  el('rect',{x:272,y:24,width:16,height:110,rx:8,fill:'#101214',stroke:'#000'},g);
+  for(let v=0;v<=12;v++){const y=134-110*v/12;el('line',{x1:v%4===0?268.5:270.5,y1:y,x2:272,y2:y,stroke:'#6f757d','stroke-width':v%4===0?1.2:.8},g);}
+  const gf=el('rect',{x:274,y:134,width:12,height:0,rx:6,fill:'#ff3b2f',opacity:.9},g);
+  const gh=el('circle',{cx:280,cy:134,r:8,fill:'#e8e8e8',stroke:'#14161a','stroke-width':1.5},g);
+  el('rect',Object.assign({x:269,y:16,width:30,height:130,fill:'transparent'},ctx.a({'data-gauge':it.uid,style:'cursor:ns-resize'})),g);
+  if(ctx.main){it.gFill=gf;it.gHandle=gh;}
   [[196,'▼',-1],[234,'▲',1]].forEach(([x,label,step])=>{
     const b=el('g',ctx.a({'data-step':it.uid+'|'+step,style:'cursor:pointer'}),g);
     el('rect',{x:x,y:102,width:34,height:28,rx:5,fill:'#3a3e45',stroke:'#14161a'},b);
@@ -721,6 +747,7 @@ function update(){
       if(is!==it.lastI){if(is==='---')drawSeven(it.dispI,['-','-','-'],-1,30,75);else drawSeven(it.dispI,[is[0],is[2],is[3]],0,30,75);it.lastI=is;}
       it.ledOut.setAttribute('fill',!it.tripped?'#3ddc6a':'#1f3b24');
       it.knobRot.setAttribute('transform',`rotate(${-150+300*it.V10/VMAX10})`);
+      const gH=110*it.V10/VMAX10;it.gFill.setAttribute('y',134-gH);it.gFill.setAttribute('height',Math.max(0,gH));it.gHandle.setAttribute('cy',134-gH);
     }
     if(it.type==='sw')it.swLabel.textContent=it.on?'닫힘':'열림';
   }
@@ -784,6 +811,8 @@ svg.addEventListener('pointerdown',e=>{
   cancelPending();
   if(!closestAttr(e.target,'data-comp')){const wi=wireAt(pt);if(wi>=0){drag={type:'wire',i:wi};return;}}
   if(S.selected!==null){S.selected=null;renderWires();}
+  const gg=closestAttr(e.target,'data-gauge');
+  if(gg){const it=byId[gg.getAttribute('data-gauge')];drag={type:'gauge',it};svg.setPointerCapture(e.pointerId);gaugeSet(it,pt);e.preventDefault();return;}
   const k=closestAttr(e.target,'data-knob');
   if(k){const it=byId[k.getAttribute('data-knob')];
     drag={type:'knob',it,ly:e.clientY,acc:0};svg.setPointerCapture(e.pointerId);e.preventDefault();return;}
@@ -818,6 +847,7 @@ window.addEventListener('pointermove',e=>{
     const k=nw/drag.w0;view.w=nw;view.x=drag.mid.x-(drag.mid.x-drag.vx)*k;view.y=drag.mid.y-(drag.mid.y-drag.vy)*k;view.h=nw/aspect();clampView();applyView();return;}
   if(drag.type==='pan'){view.x=drag.vx-(e.clientX-drag.sx)/drag.k;view.y=drag.vy-(e.clientY-drag.sy)/drag.k;clampView();applyView();return;}
   const pt=svgPt(e);
+  if(drag.type==='gauge'){gaugeSet(drag.it,pt);return;}
   if(drag.type==='knob'){
     drag.acc+=drag.ly-e.clientY;drag.ly=e.clientY;const steps=Math.trunc(drag.acc/3);
     if(steps){drag.acc-=steps*3;setV(drag.it,drag.it.V10+steps);}return;}
@@ -852,6 +882,7 @@ function endPointer(e){
     else{const s=closestAttr(drag.tap,'data-switch');
       if(s)toggleSwitch(it);
       else if(it.type==='bulb'&&it.burnt&&closestAttr(drag.tap,'data-bulbrep')){it.burnt=false;update();}
+      else if(it.type==='ps'&&closestAttr(drag.tap,'data-vdisp'))openVset(it);
       }
   }
   if(drag.type==='wire'){const i=drag.i;S.selItem=null;layout();S.selected=S.selected===i?null:i;renderWires();}
@@ -876,7 +907,7 @@ svg.addEventListener('keydown',e=>{const k=closestAttr(e.target,'data-knob');if(
   if(e.key==='ArrowUp'||e.key==='ArrowRight'){setV(it,it.V10+1);e.preventDefault();}
   if(e.key==='ArrowDown'||e.key==='ArrowLeft'){setV(it,it.V10-1);e.preventDefault();}});
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){if(!qrEl.hidden)qrEl.hidden=true;else{cancelPending();if(S.selected!==null){S.selected=null;renderWires();}}}
+  if(e.key==='Escape'){if(!vsetEl.hidden)vsetEl.hidden=true;else if(!qrEl.hidden)qrEl.hidden=true;else{cancelPending();if(S.selected!==null){S.selected=null;renderWires();}}}
   if((e.key==='Delete'||e.key==='Backspace')&&document.activeElement===document.body){
     if(S.selected!==null){deleteSelected();e.preventDefault();}
     else if(S.selItem&&byId[S.selItem]){removeItem(byId[S.selItem]);update();e.preventDefault();}}
@@ -1001,6 +1032,18 @@ document.getElementById('qrBtn').addEventListener('click',()=>{
 qrUrl.addEventListener('input',()=>{drawQr();if(!pageUrl()){try{localStorage.setItem('vlab-qr-url',qrUrl.value.trim());}catch(err){}}});
 document.getElementById('qrClose').addEventListener('click',()=>{qrEl.hidden=true;});
 qrEl.addEventListener('click',e=>{if(e.target===qrEl)qrEl.hidden=true;});
+
+const vsetEl=document.getElementById('vset'),vsetVal=document.getElementById('vsetVal'),vsetGrid=document.getElementById('vsetGrid');let vsetIt=null;
+for(let v=0;v<=12;v++){const b=document.createElement('button');b.textContent=v;b.dataset.v=v;vsetGrid.appendChild(b);}
+function vsetRefresh(){if(!vsetIt)return;vsetVal.textContent=(vsetIt.V10/10).toFixed(1)+' V';
+  [...vsetGrid.children].forEach(b=>b.classList.toggle('on',+b.dataset.v*10===vsetIt.V10));}
+function openVset(it){vsetIt=it;vsetRefresh();vsetEl.hidden=false;}
+vsetGrid.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!vsetIt)return;setV(vsetIt,+b.dataset.v*10);vsetEl.hidden=true;});
+document.getElementById('vsetDn').addEventListener('click',()=>{if(vsetIt){setV(vsetIt,vsetIt.V10-1);vsetRefresh();}});
+document.getElementById('vsetUp').addEventListener('click',()=>{if(vsetIt){setV(vsetIt,vsetIt.V10+1);vsetRefresh();}});
+document.getElementById('vsetClose').addEventListener('click',()=>{vsetEl.hidden=true;});
+vsetEl.addEventListener('click',e=>{if(e.target===vsetEl)vsetEl.hidden=true;});
+function gaugeSet(it,pt){setV(it,clamp((134-(pt.y-it.y))/110,0,1)*VMAX10);}
 
 const mainEl=document.querySelector('.main');
 function sizeMain(){const top=mainEl.getBoundingClientRect().top+window.scrollY;
