@@ -185,7 +185,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 /* ---------- constants ---------- */
 const WW=1500,WH=860;
-const RPS=0.002, ILIM=1.0, VMAX10=120;
+const RPS=1e-5, ILIM=1.0, VMAX10=120;
 const BENCH_TEXT='#e3eee8';
 const PALETTE=['#e53935','#1e6fd9','#f2c200','#2b2b2b','#2e9d4a','#a64fd6','#ff7f0e','#f5f5f5'];
 
@@ -272,7 +272,7 @@ const TYPES={
       terms:[['-',70,140,'black','(−)극',[0,1]],['+',120,140,'red','(+)극',[0,1]]]},
   sw:{name:'스위치',tray:'스위치',w:170,h:70,
       terms:[['1',18,35,'blue','단자',[-1,0]],['2',152,35,'blue','단자',[1,0]]]},
-  am:{name:'전류계',tray:'전류계',w:200,h:170,R:0.002,
+  am:{name:'전류계',tray:'전류계',w:200,h:170,R:1e-5,
       terms:[['-',56,154,'black','(−)단자',[0,1]],['+',144,154,'red','(+)단자',[0,1]]]},
   vm:{name:'전압계',tray:'전압계',w:200,h:132,R:1e6,
       terms:[['-',56,116,'black','(−)단자',[0,1]],['+',144,116,'red','(+)단자',[0,1]]]},
@@ -647,7 +647,7 @@ function solve(){
   const inj=(a,c)=>{const p=ix(a);if(p>=0)I[p]+=c;};
   for(const it of S.items){
     if(it.type==='ps'&&!it.tripped){const g=1/RPS,V=it.V10/10;stamp(tid(it,'+'),tid(it,'-'),g);inj(tid(it,'+'),V*g);inj(tid(it,'-'),-V*g);}
-    else if(it.type==='sw'&&it.on)stamp(tid(it,'1'),tid(it,'2'),1e3);
+    else if(it.type==='sw'&&it.on)stamp(tid(it,'1'),tid(it,'2'),1e5);
     else if(it.type==='am'||it.type==='vm')stamp(tid(it,'+'),tid(it,'-'),1/it.R);
     else if(it.type==='nl'||it.type==='ns')stamp(tid(it,'A'),tid(it,'B'),1/it.R);
     else if(isBat(it)){const n=TYPES[it.type].cells,g=1/(0.1*n),V=1.5*n;stamp(tid(it,'+'),tid(it,'-'),g);inj(tid(it,'+'),V*g);inj(tid(it,'-'),-V*g);}
