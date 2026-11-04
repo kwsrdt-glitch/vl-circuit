@@ -691,6 +691,7 @@ let lastMsg='';
 const statusEl=document.getElementById('status');
 function update(){
   layout();
+  for(const it of S.items)if(it.type==='ps')it.tripped=false;
   let vol=solve();
   for(let guard=0;guard<10;guard++){const t=S.items.find(i=>i.type==='ps'&&!i.tripped&&i.Ips>ILIM);if(!t)break;t.tripped=true;vol=solve();}
   for(let guard=0;guard<10;guard++){const b=S.items.find(i=>i.type==='bulb'&&!i.burnt&&bulbP(i,vol)>3);if(!b)break;b.burnt=true;vol=solve();}
